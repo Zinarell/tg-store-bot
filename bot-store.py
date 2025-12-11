@@ -34,11 +34,6 @@ class Commands:
         await update.message.reply_text("Добро пожаловать в магазин! Выберите действие:",
         reply_markup=markup)
 
-class Callback_Handler:
-    async def __call__(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-
 
 def main():
     builder_app = ApplicationBuilder()#Создаем конфигуратор приложения
