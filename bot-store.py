@@ -1,6 +1,8 @@
 from telegram  import (Update, 
                         ReplyKeyboardMarkup, 
                         ReplyKeyboardRemove,
+                        InlineKeyboardButton,
+                        InlineKeyboardMarkup
                         )
 from telegram.ext import ( ApplicationBuilder,
                             CommandHandler,
@@ -9,11 +11,33 @@ from telegram.ext import ( ApplicationBuilder,
                             filters,
                             ConversationHandler
                             )
+
 import random as r
 import dotenv
 import os
 dotenv.load_dotenv()
 TOKEN = os.getenv("TOKEN")
+
+
+
+class Commands:
+    def __init__(self, app):
+        start_handler = CommandHandler("start",self.start)
+        app.add_handler(start_handler)
+
+    async def start(self, update:Update, context: ContextTypes):
+        keyboard = [
+        [InlineKeyboardButton("Каталог 🛒", callback_data="catalog")],
+        [InlineKeyboardButton("Корзина 🛍️", callback_data="basket")],
+    ]
+        markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text("Добро пожаловать в магазин! Выберите действие:",
+        reply_markup=markup)
+
+class Callback_Handler:
+    async def __call__(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
 
 
 def main():
