@@ -15,15 +15,34 @@ from telegram.ext import ( ApplicationBuilder,
 import random as r
 import dotenv
 import os
+import sqlite3
+
+
 dotenv.load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
+
+conn = sqlite3.connect('products.db')
+cursor = conn.cursor()
+
+cursor.execute("SELECT id, name, price FROM products")
+rows = cursor.fetchall()
+
 global products
-products = {
-    1:{"name": "iPhone 15", "price": "999"},
-    2:{"name": "MacBook Pro", "price": "1999"},
-    3:{"name": "AirPods Pro", "price": "249"}
-}
+products = {}
+
+for row in rows:
+    product_id = row[0]
+    name = row[1]
+    price = row[2]
+
+    products[product_id] = {
+        "name": name,
+        "price": str(price) 
+    }
+
+conn.close()
+
 
 
 class Commands:
@@ -45,7 +64,7 @@ class Commands:
         for id in products:
             name = products[id]["name"]
             price = products[id]["price"]
-            keyboard += [InlineKeyboardButton(f"{name} - ${price}", callback_data=f"AddBasket {id}")]
+            keyboard.append([InlineKeyboardButton(f"{name} - ${price}", callback_data=f"AddBasket {id}")])
         markup = InlineKeyboardMarkup(keyboard)
         await query.message.reply_text("📦 Каталог товаров:",
         reply_markup=markup)
@@ -76,9 +95,12 @@ reply_markup = markup)
     async def add_product(self, update:Update, context: ContextTypes, query, product_id):
         if context.user_data.get("basket") == None:
             context.user_data["basket"] = []
+
+            context.user_data["basket"].append(product_id) #Добавляет в корзину не сам продукт, а его id в каталоге
+            await query.message.reply_text(f"Товар {products[product_id]['name']} добавлен в корзину!")
         else:
             context.user_data["basket"].append(product_id) #Добавляет в корзину не сам продукт, а его id в каталоге
-            await query.message.reply_text(f"Товар {products[product_id]["name"]} добавлен в корзину!")
+            await query.message.reply_text(f"Товар {products[product_id]['name']} добавлен в корзину!")
 
     async def make_order(self, update:Update, context: ContextTypes, query):
         keyboard = [
@@ -116,6 +138,8 @@ def main():
     builder_app.token(token=TOKEN)
 
     app = builder_app.build()#Функция создает бота (ядро приложения)
+
+    
 
     print("Бот запущен...")
     app.run_polling()#Начинаем опрашивать телеграмм
